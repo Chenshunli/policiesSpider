@@ -56,27 +56,29 @@ class GzZhengceSpider(scrapy.Spider):
             flag = True
             while flag:
                 sleep(3)
-                content = driver.find_element_by_class_name("news_list").text
-                url = driver.find_element_by_class_name("news_list").text
-                contentList = str(content).split("\n")
+                # content = driver.find_element_by_class_name("news_list").text
+                # url = driver.find_element_by_class_name("news_list").text
+                # contentList = str(content).split("\n")
                 floderurls = driver.find_elements_by_xpath("//div[@ class = 'mainContent']/ul/li//a")
                 sleep(5)
                 try:
                     for floderurl in floderurls:
                         result = floderurl.get_attribute("href")
                         urls.append(result)
+                        titleInfo = floderurl.text
+                        titleList.append(titleInfo)
                         # FLODERURLSLIST.append(result)
                         # print(result)
 
-                    for i in range(len(contentList)):
-                        cont = contentList[i]
-                        if i % 2 == 0:
-                            titleList.append(cont)
-                        else:
-                            date1 = cont.split(" ")[0]
-                            # date2 = cont.split(" ")[1]
-                            fabuDateList.append(date1)
-                            # chengwenDateList.append(date2)
+                    # for i in range(len(contentList)):
+                    #     cont = contentList[i]
+                    #     if i % 2 == 0:
+                    #         titleList.append(cont)
+                    #     else:
+                    #         date1 = cont.split(" ")[0]
+                    #         # date2 = cont.split(" ")[1]
+                    #         fabuDateList.append(date1)
+                    #         # chengwenDateList.append(date2)
                     try:
                         # elem1=driver.find_element_by_link_text("下一页")
                         next = driver.find_elements_by_xpath("//div[@class='pagediv']//a[@class='next']")
@@ -96,19 +98,21 @@ class GzZhengceSpider(scrapy.Spider):
         print("即将爬取"+str(len(urls))+"条数据...")
         # 关闭所有窗口
         # driver.quit()
-        for i in range(len(urls)):
-            url0 = urls[i]
-            start = str(url0).find("_") + 1
-            index = str(url0)[start:-5]
-            item['url'] = url0
-            item['index'] = index
-            # item['title'] = titleList[i]
-            # item['createDate'] = fabuDateList[i]
-            # item['impDate'] = chengwenDateList[i]
-            # yield item
+        if len(urls) == len(titleList):
+            for i in range(len(urls)):
+                url0 = urls[i]
+                start = str(url0).find("_") + 1
+                index = str(url0)[start:-5]
+                item['url'] = url0
+                item['index'] = index
+                item['title'] = titleList[i]
+                # item['title'] = titleList[i]
+                # item['createDate'] = fabuDateList[i]
+                # item['impDate'] = chengwenDateList[i]
+                # yield item
 
-            yield scrapy.http.Request(url=url0, meta={'item': copy.deepcopy(item)}, callback=self.parse_detail,
-                                      errback=self.errback)
+                yield scrapy.http.Request(url=url0, meta={'item': copy.deepcopy(item)}, callback=self.parse_detail,
+                                          errback=self.errback)
 
     def errback(self, failure):
         self.logger.error(repr(failure))
@@ -146,19 +150,26 @@ class GzZhengceSpider(scrapy.Spider):
                     item['detailInfo'] = " ".join(content)
                 else:
                     item['detailInfo'] = ""
-                if "附件" in content:
-                    contList = response.xpath("//div[@class ='article-content']/p[contains(@style,'margin-bottom')]")
-                    # 可能有多个附件
-                    file_list = []
-                    nameList =[]
+                item['file_urls'] = ""
+                item['files'] = ""
+                # if "附件" in content:
+                # contList = response.xpath("//div[@class ='content_article']/p/a[@class='nfw-cms-attachment']")
+                contList = response.xpath("//div[@class ='content_article']/p/a[@target='_blank']")
+                # 可能有多个附件
+                file_list = []
+                nameList =[]
+                if len(contList) > 0:
                     for fujianUrl in contList:
                         # fujianUrl = contList[-1]
                         # f_list = fujianUrl.xpath("//a/@href").extract()
                         f_list = fujianUrl.css("a::attr(href)").get()
                         if isinstance(f_list,str):
-                            file_list.append("http:" + f_list)
+                            if f_list.startswith("http"):
+                                file_list.append(f_list)
+                            else:
+                                file_list.append("http://ghzyj.gz.gov.cn"+f_list)
                             # fName = fujianUrl.xpath(".//a/text()").extract()
-                            fName = fujianUrl.xpath("string(.//a)").extract()[0]
+                            fName = fujianUrl.xpath("text()").extract()[0]
                             # f = fujianUrl.xpath("./a/text()")
                             # name = fName[0].replace("：", "")
                             nameList.append(fName)
@@ -166,8 +177,6 @@ class GzZhengceSpider(scrapy.Spider):
                     # item['files'] = nameList
                     item['file_urls'] = ';'.join(file_list)
                     item['files'] = ';'.join(nameList)
-                else:
-                    item['file_urls'] = ""
-                    item['files'] = ""
+
             yield item
 

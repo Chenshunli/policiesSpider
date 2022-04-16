@@ -47,7 +47,7 @@ class MyFilesPipeline(FilesPipeline):  #在FilesPipeline的基础上创建了自
         file_name = request.meta['file_name']
         # return 'gd/%s' % (file_name)
         # return 'gz/%s' % (file_name)
-        return 'zrzy/%s' % (file_name)
+        # return 'zrzy/%s' % (file_name)
 
     # def file_downloaded(self, response, request, info):  #函数名称和原FilesPipeline中的一样
     #     pattern = re.compile(r'filename=(.*)')    #文件名就是filename后面的字符串
@@ -79,7 +79,7 @@ class MyFilesPipeline(FilesPipeline):  #在FilesPipeline的基础上创建了自
 class ZrzypoliciesPipeline:
 
     def open_spider(self, spider):
-        if spider.name == "zhengce":
+        if spider.name == "zrzybZc":
             self.file = open(spider.name + '.csv', 'a+', encoding='utf_8_sig')
         elif spider.name == "gdZhengce":
             self.file = open(spider.name + '.csv', 'a+', encoding='utf_8_sig')

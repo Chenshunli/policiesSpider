@@ -48,9 +48,6 @@ class GdZhengceSpider(scrapy.Spider):
             sleep(1)
             pageNation =  driver.find_elements_by_xpath("//div[@class='pagination']")
             pages =  pageNation[0].text
-            # pages = driver.find_element_by_class_name('pagination').text
-            # pList = driver.find_elements_by_xpath("//div[@class='pagination']//a")
-            # pList1 = str(pages).split("\n")
             # urls = []
             # titleList = []
             # fabuDateList = []
@@ -69,7 +66,9 @@ class GdZhengceSpider(scrapy.Spider):
                 try:
                     for floderurl in floderurls:
                         result = floderurl.get_attribute("href")
+                        titleInfo = floderurl.text
                         urls.append(result)
+                        # titleList
                         # yield scrapy.http.Request(url=result, meta={'item': copy.deepcopy(item)},
                         #                           callback=self.parse_detail, errback=self.errback)
 
